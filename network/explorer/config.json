@@ -1,0 +1,9 @@
+{
+  "network-configs": {
+    "certificate-verification-network": {
+      "name": "Certificate Verification Network",
+      "profile": "./connection-profile/certificate-verification-network.json"
+    }
+  },
+  "license": "Apache-2.0"
+}

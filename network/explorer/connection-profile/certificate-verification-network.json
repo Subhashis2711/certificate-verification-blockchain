@@ -1,0 +1,77 @@
+{
+  "name": "certificate-verification-network",
+  "version": "1.0.0",
+  "client": {
+    "tlsEnable": true,
+    "adminCredential": {
+      "id": "exploreradmin",
+      "password": "exploreradminpw"
+    },
+    "enableAuthentication": true,
+    "organization": "IssuerMSP",
+    "connection": {
+      "timeout": {
+        "peer": {
+          "endorser": "300"
+        },
+        "orderer": "300"
+      }
+    }
+  },
+  "channels": {
+    "mychannel": {
+      "peers": {
+        "peer0.issuer.example.com": {},
+        "peer0.verifier.example.com": {}
+      }
+    }
+  },
+  "organizations": {
+    "IssuerMSP": {
+      "mspid": "IssuerMSP",
+      "adminPrivateKey": {
+        "path": "/tmp/crypto/peerOrganizations/issuer.example.com/users/User1@issuer.example.com/msp/keystore/priv_sk"
+      },
+      "peers": [
+        "peer0.issuer.example.com"
+      ],
+      "signedCert": {
+        "path": "/tmp/crypto/peerOrganizations/issuer.example.com/users/User1@issuer.example.com/msp/signcerts/User1@issuer.example.com-cert.pem"
+      }
+    },
+    "VerifierMSP": {
+      "mspid": "VerifierMSP",
+      "adminPrivateKey": {
+        "path": "/tmp/crypto/peerOrganizations/verifier.example.com/users/User1@verifier.example.com/msp/keystore/priv_sk"
+      },
+      "peers": [
+        "peer0.verifier.example.com"
+      ],
+      "signedCert": {
+        "path": "/tmp/crypto/peerOrganizations/verifier.example.com/users/User1@verifier.example.com/msp/signcerts/User1@verifier.example.com-cert.pem"
+      }
+    }
+  },
+  "orderers": {
+    "orderer.example.com": {
+      "tlsCACerts": {
+        "path": "/tmp/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/tls/ca.crt"
+      },
+      "url": "grpcs://orderer.example.com:7050"
+    }
+  },
+  "peers": {
+    "peer0.issuer.example.com": {
+      "tlsCACerts": {
+        "path": "/tmp/crypto/peerOrganizations/issuer.example.com/peers/peer0.issuer.example.com/tls/ca.crt"
+      },
+      "url": "grpcs://peer0.issuer.example.com:7051"
+    },
+    "peer0.verifier.example.com": {
+      "tlsCACerts": {
+        "path": "/tmp/crypto/peerOrganizations/verifier.example.com/peers/peer0.verifier.example.com/tls/ca.crt"
+      },
+      "url": "grpcs://peer0.verifier.example.com:9051"
+    }
+  }
+}
