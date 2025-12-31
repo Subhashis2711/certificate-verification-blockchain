@@ -45,5 +45,5 @@ joinChannel(){
     ../bin/peer channel join -b ../artifacts/$CHANNEL_NAME.block    
 }
 
-#createChannel
+createChannel
 joinChannel

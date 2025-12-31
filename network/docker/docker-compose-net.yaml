@@ -1,54 +1,90 @@
-# Certificate Verification Network - TLS Enabled
-# Compatible with Docker Compose v2+ (no 'version' field required)
+version: "2"
 
 networks:
   certificate-verification-network:
     name: certificate-verification-network
-    driver: bridge
     external: true
 
 services:
-  # ---------------------------------------------------------------------------
-  # Orderer
-  # ---------------------------------------------------------------------------
+  ca-issuer:
+    image: hyperledger/fabric-ca
+    environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca.issuer.example.com
+      - FABRIC_CA_SERVER_CA_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.issuer.example.com-cert.pem
+      - FABRIC_CA_SERVER_CA_KEYFILE=/etc/hyperledger/fabric-ca-server-config/priv_sk
+      - FABRIC_CA_SERVER_TLS_ENABLED=true
+      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-tls/tlsca.issuer.example.com-cert.pem
+      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-tls/priv_sk
+    ports:
+      - "7054:7054"
+    command: sh -c 'fabric-ca-server start -b admin:adminpw -d'
+    volumes:
+      - ../organizations/peerOrganizations/issuer.example.com/ca/:/etc/hyperledger/fabric-ca-server-config
+      - ../organizations/peerOrganizations/issuer.example.com/tlsca/:/etc/hyperledger/fabric-ca-server-tls
+    container_name: ca.issuer.example.com
+    hostname: ca.issuer.example.com
+    networks:
+      - certificate-verification-network
+
+  ca-verifier:
+    image: hyperledger/fabric-ca
+    environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca.verifier.example.com
+      - FABRIC_CA_SERVER_CA_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.verifier.example.com-cert.pem
+      - FABRIC_CA_SERVER_CA_KEYFILE=/etc/hyperledger/fabric-ca-server-config/priv_sk
+      - FABRIC_CA_SERVER_TLS_ENABLED=true
+      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-tls/tlsca.verifier.example.com-cert.pem
+      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-tls/priv_sk
+    ports:
+      - "8054:7054"
+    command: sh -c 'fabric-ca-server start -b admin:adminpw -d'
+    volumes:
+      - ../organizations/peerOrganizations/verifier.example.com/ca/:/etc/hyperledger/fabric-ca-server-config
+      - ../organizations/peerOrganizations/verifier.example.com/tlsca/:/etc/hyperledger/fabric-ca-server-tls
+    container_name: ca.verifier.example.com
+    hostname: ca.verifier.example.com
+    networks:
+      - certificate-verification-network
+
   orderer.example.com:
     container_name: orderer.example.com
     image: hyperledger/fabric-orderer:2.5
+    dns_search: .
     environment:
+      - ORDERER_GENERAL_LOGLEVEL=info
       - FABRIC_LOGGING_SPEC=INFO
       - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
-      - ORDERER_GENERAL_LISTENPORT=7050
       - ORDERER_GENERAL_GENESISMETHOD=file
       - ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/genesis.block
       - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
       - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
-      # --- TLS Configuration ---
       - ORDERER_GENERAL_TLS_ENABLED=true
       - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
       - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
       - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
-      # Admin & metrics
-      - ORDERER_OPERATIONS_LISTENADDRESS=0.0.0.0:9443
-      - ORDERER_ADMIN_LISTENADDRESS=0.0.0.0:9444
+      - ORDERER_KAFKA_VERBOSE=true
+      - ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_CLUSTER_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
       - ORDERER_METRICS_PROVIDER=prometheus
-    working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+      - ORDERER_OPERATIONS_LISTENADDRESS=0.0.0.0:8443
+      - ORDERER_GENERAL_LISTENPORT=7050
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/orderers
     command: orderer
-    volumes:
-      - ../artifacts/genesis.block:/var/hyperledger/orderer/genesis.block
-      - ../organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp:/var/hyperledger/orderer/msp
-      - ../organizations/ordererOrganizations/example.com/orderers/orderer.example.com/tls:/var/hyperledger/orderer/tls
-      - orderer_data:/var/hyperledger/production/orderer
     ports:
       - 7050:7050
     networks:
       - certificate-verification-network
+    volumes:
+      - ../artifacts/genesis.block:/var/hyperledger/orderer/genesis.block
+      - ../organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp:/var/hyperledger/orderer/msp
+      - ../organizations/ordererOrganizations/example.com/orderers/orderer.example.com/tls:/var/hyperledger/orderer/tls
 
-  # ---------------------------------------------------------------------------
-  # CouchDB for Issuer Org
-  # ---------------------------------------------------------------------------
   couchdb.issuer.example.com:
     container_name: couchdb.issuer.example.com
-    image: couchdb:3.3
+    image: hyperledger/fabric-couchdb
     environment:
       - COUCHDB_USER=admin
       - COUCHDB_PASSWORD=adminpw
@@ -57,50 +93,9 @@ services:
     networks:
       - certificate-verification-network
 
-  # ---------------------------------------------------------------------------
-  # Peer0 - Issuer Org (TLS enabled)
-  # ---------------------------------------------------------------------------
-  peer0.issuer.example.com:
-    container_name: peer0.issuer.example.com
-    image: hyperledger/fabric-peer:2.5
-    environment:
-      - CORE_PEER_ID=peer0.issuer.example.com
-      - CORE_PEER_LOCALMSPID=IssuerMSP
-      - CORE_PEER_ADDRESS=peer0.issuer.example.com:7051
-      - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
-      - CORE_PEER_CHAINCODEADDRESS=peer0.issuer.example.com:7052
-      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
-      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.issuer.example.com:7051
-      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.issuer.example.com:7051
-      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
-      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb.issuer.example.com:5984
-      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=admin
-      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=adminpw
-      # --- TLS Configuration ---
-      - CORE_PEER_TLS_ENABLED=true
-      - CORE_PEER_TLS_CERT_FILE=/var/hyperledger/peer/tls/server.crt
-      - CORE_PEER_TLS_KEY_FILE=/var/hyperledger/peer/tls/server.key
-      - CORE_PEER_TLS_ROOTCERT_FILE=/var/hyperledger/peer/tls/ca.crt
-      - CORE_LOGGING_PEER=info
-    depends_on:
-      - couchdb.issuer.example.com
-      - orderer.example.com
-    command: peer node start
-    volumes:
-      - ../organizations/peerOrganizations/issuer.example.com/peers/peer0.issuer.example.com/msp:/var/hyperledger/peer/msp
-      - ../organizations/peerOrganizations/issuer.example.com/peers/peer0.issuer.example.com/tls:/var/hyperledger/peer/tls
-      - peer0_issuer_data:/var/hyperledger/production
-    ports:
-      - 7051:7051
-    networks:
-      - certificate-verification-network
-
-  # ---------------------------------------------------------------------------
-  # CouchDB for Verifier Org
-  # ---------------------------------------------------------------------------
   couchdb.verifier.example.com:
     container_name: couchdb.verifier.example.com
-    image: couchdb:3.3
+    image: hyperledger/fabric-couchdb
     environment:
       - COUCHDB_USER=admin
       - COUCHDB_PASSWORD=adminpw
@@ -109,50 +104,88 @@ services:
     networks:
       - certificate-verification-network
 
-  # ---------------------------------------------------------------------------
-  # Peer0 - Verifier Org (TLS enabled)
-  # ---------------------------------------------------------------------------
+  peer0.issuer.example.com:
+    container_name: peer0.issuer.example.com
+    extends:
+      file: base.yaml
+      service: peer-base
+    environment:
+      - FABRIC_LOGGING_SPEC=info
+      - ORDERER_GENERAL_LOGLEVEL=info
+      - CORE_PEER_LOCALMSPID=IssuerMSP
+
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=artifacts_certificate-verification-network
+
+      - CORE_PEER_ID=peer0.issuer.example.com
+      - CORE_PEER_ADDRESS=peer0.issuer.example.com:7051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.issuer.example.com:7052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+      # Peer used to bootstrap gossip within organisation
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.issuer.example.com:8051
+      # Exposed for discovery Service
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.issuer.example.com:7051
+
+      # - CORE_OPERATIONS_LISTENADDRESS=0.0.0.0:9440
+
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb.issuer.example.com:5984
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=admin
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=adminpw
+      - CORE_METRICS_PROVIDER=prometheus
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/crypto/peer/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/crypto/peer/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/crypto/peer/tls/ca.crt
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto/peer/msp
+    depends_on:
+      - couchdb.issuer.example.com
+    ports:
+      - 7051:7051
+    volumes:
+      - ../organizations/peerOrganizations/issuer.example.com/peers/peer0.issuer.example.com/msp:/etc/hyperledger/crypto/peer/msp
+      - ../organizations/peerOrganizations/issuer.example.com/peers/peer0.issuer.example.com/tls:/etc/hyperledger/crypto/peer/tls
+      - /var/run/:/host/var/run/
+    networks:
+      - certificate-verification-network
+
   peer0.verifier.example.com:
     container_name: peer0.verifier.example.com
-    image: hyperledger/fabric-peer:2.5
+    extends:
+      file: base.yaml
+      service: peer-base
     environment:
-      - CORE_PEER_ID=peer0.verifier.example.com
+      - FABRIC_LOGGING_SPEC=info
+      - ORDERER_GENERAL_LOGLEVEL=info
       - CORE_PEER_LOCALMSPID=VerifierMSP
+
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=artifacts_certificate-verification-network
+
+      - CORE_PEER_ID=peer0.verifier.example.com
       - CORE_PEER_ADDRESS=peer0.verifier.example.com:9051
       - CORE_PEER_LISTENADDRESS=0.0.0.0:9051
       - CORE_PEER_CHAINCODEADDRESS=peer0.verifier.example.com:9052
       - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:9052
-      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.verifier.example.com:9051
+      # Exposed for discovery Service
       - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.verifier.example.com:9051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.verifier.example.com:10051
+
       - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
       - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb.verifier.example.com:5984
       - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=admin
       - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=adminpw
-      # --- TLS Configuration ---
+      - CORE_METRICS_PROVIDER=prometheus
+      # - CORE_OPERATIONS_LISTENADDRESS=0.0.0.0:9440
       - CORE_PEER_TLS_ENABLED=true
-      - CORE_PEER_TLS_CERT_FILE=/var/hyperledger/peer/tls/server.crt
-      - CORE_PEER_TLS_KEY_FILE=/var/hyperledger/peer/tls/server.key
-      - CORE_PEER_TLS_ROOTCERT_FILE=/var/hyperledger/peer/tls/ca.crt
-      - CORE_LOGGING_PEER=info
-    depends_on:
-      - couchdb.verifier.example.com
-      - orderer.example.com
-    command: peer node start
-    volumes:
-      - ../organizations/peerOrganizations/verifier.example.com/peers/peer0.verifier.example.com/msp:/var/hyperledger/peer/msp
-      - ../organizations/peerOrganizations/verifier.example.com/peers/peer0.verifier.example.com/tls:/var/hyperledger/peer/tls
-      - peer0_verifier_data:/var/hyperledger/production
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/crypto/peer/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/crypto/peer/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/crypto/peer/tls/ca.crt
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto/peer/msp
     ports:
       - 9051:9051
+    volumes:
+      - ../organizations/peerOrganizations/verifier.example.com/peers/peer0.verifier.example.com/msp:/etc/hyperledger/crypto/peer/msp
+      - ../organizations/peerOrganizations/verifier.example.com/peers/peer0.verifier.example.com/tls:/etc/hyperledger/crypto/peer/tls
+      - /var/run/:/host/var/run/
     networks:
       - certificate-verification-network
-
-# ---------------------------------------------------------------------------
-# Volumes
-# ---------------------------------------------------------------------------
-volumes:
-  orderer_data:
-  peer0_issuer_data:
-  peer0_verifier_data:
-
-
