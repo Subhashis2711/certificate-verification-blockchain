@@ -5,5 +5,14 @@
       "profile": "./connection-profile/certificate-verification-network.json"
     }
   },
+  "channels": {
+    "certificate-verification-channel": {
+      "mainChaincode": "certificate-verification-chaincode",
+      "peerNames": [
+        "peer0.issuer.example.com",
+        "peer0.verifier.example.com"
+      ]
+    }
+  },
   "license": "Apache-2.0"
 }

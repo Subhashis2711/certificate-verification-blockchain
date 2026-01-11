@@ -15,7 +15,7 @@ fi
 
 # --- 2. CONFIGURATION ---
 CHANNEL_NAME="certificate-verification-channel"
-CC_NAME="cert-chaincode"
+CC_NAME="certificate-verification-chaincode"
 
 ORDERER_CA=${PWD}/../organizations/ordererOrganizations/example.com/orderers/orderer.example.com/tls/ca.crt
 ISSUER_TLS_ROOT=${PWD}/../organizations/peerOrganizations/issuer.example.com/peers/peer0.issuer.example.com/tls/ca.crt
@@ -52,7 +52,7 @@ peer chaincode invoke -o localhost:7050 --ordererTLSHostnameOverride orderer.exa
     -c '{"function":"IssueCertificate","Args":["CERT_001", "hash123", "John Doe", "Blockchain", "Issuer Org", "2026-01-02"]}'
 
 # Give the ledger a moment to commit the block
-sleep 2
+sleep 10
 
 setVerifier
 echo "Querying as Verifier..."

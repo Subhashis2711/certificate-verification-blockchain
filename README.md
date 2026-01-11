@@ -156,7 +156,7 @@ The backend uses the Fabric Gateway SDK to interact with the network.
 
 ### 1. Install Dependencies
 ```bash
-cd ../../backend
+cd backend
 npm install
 ```
 
