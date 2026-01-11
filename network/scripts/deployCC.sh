@@ -3,6 +3,7 @@
 # 1. Path setup (Adjust these to your local paths)
 export PATH=${PWD}/../bin:$PATH
 export FABRIC_CFG_PATH=${PWD}/../config/ # Path containing core.yaml
+mkdir -p "${PWD}/../artifacts/chaincode"
 ARTIFACTS_PATH="${PWD}/../artifacts/chaincode"
 
 # 2. Network Constants
