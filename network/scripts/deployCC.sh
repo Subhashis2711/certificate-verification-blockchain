@@ -3,10 +3,11 @@
 # 1. Path setup (Adjust these to your local paths)
 export PATH=${PWD}/../bin:$PATH
 export FABRIC_CFG_PATH=${PWD}/../config/ # Path containing core.yaml
+ARTIFACTS_PATH="${PWD}/../artifacts/chaincode"
 
 # 2. Network Constants
 CHANNEL_NAME="certificate-verification-channel"
-CC_NAME="cert-chaincode"
+CC_NAME="certificate-verification-chaincode"
 CC_SRC_PATH="../../chaincode/certificate-verification" 
 CC_VERSION="1"
 CC_SEQUENCE="1"
@@ -35,15 +36,15 @@ setVerifier() {
 }
 
 echo "--- Packaging chaincode ---"
-peer lifecycle chaincode package ${CC_NAME}.tar.gz --path ${CC_SRC_PATH} --lang node --label ${CC_NAME}_${CC_VERSION}
+peer lifecycle chaincode package ${ARTIFACTS_PATH}/${CC_NAME}.tar.gz --path ${CC_SRC_PATH} --lang node --label ${CC_NAME}_${CC_VERSION}
 
 echo "--- Installing on Peer0 Issuer ---"
 setIssuer
-peer lifecycle chaincode install ${CC_NAME}.tar.gz
+peer lifecycle chaincode install ${ARTIFACTS_PATH}/${CC_NAME}.tar.gz
 
 echo "--- Installing on Peer0 Verifier ---"
 setVerifier
-peer lifecycle chaincode install ${CC_NAME}.tar.gz
+peer lifecycle chaincode install ${ARTIFACTS_PATH}/${CC_NAME}.tar.gz
 
 # Extract Package ID
 PACKAGE_ID=$(peer lifecycle chaincode queryinstalled | sed -n "/${CC_NAME}_${CC_VERSION}/{s/^Package ID: //; s/, Label:.*$//; p;}")
