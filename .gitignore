@@ -1,8 +1,11 @@
 .DS_Store
 .idea/
+node_modules/
 
 Notes/
 hl-fabric-sample-networks/
 
 network/artifacts/
 network/organizations/
+
+network/bin/
