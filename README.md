@@ -171,3 +171,29 @@ npm run dev
 | **GET** | `/api/certificates` | Retrieve all issued certificates |
 | **POST** | `/api/issue` | Issue a new certificate (requires id, hash, student, etc.) |
 | **POST** | `/api/verify` | Verify a certificate hash against the ledger |
+
+### Testing backend API
+
+1. Issue a certificate
+```bash
+curl -X POST http://localhost:4000/api/issue \ 
+     -H "Content-Type: application/json" \
+     -d '{
+       "id": "CERT_999",
+       "hash": "d7a8fbb307d7809469ca9abcb0082e4f",
+       "student": "Alice Smith",
+       "course": "Hyperledger Fabric Developer",
+       "issuer": "Blockchain Institute",
+       "date": "2026-01-11"
+     }'
+```
+
+2. Verify the certifcate
+```bash
+curl -X POST http://localhost:4000/api/verify \
+     -H "Content-Type: application/json" \
+     -d '{
+       "id": "CERT_999",
+       "hash": "d7a8fbb307d7809469ca9abcb0082e4f" 
+     }'  
+```
