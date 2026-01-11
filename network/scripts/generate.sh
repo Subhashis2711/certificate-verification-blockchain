@@ -1,4 +1,5 @@
 #!/bin/bash
+
 set -e
 export PATH=${PWD}/../bin:$PATH
 export FABRIC_CFG_PATH=${PWD}/../config
@@ -10,6 +11,6 @@ echo "Generating Genesis block..."
 configtxgen -profile CertificateVerificationGenesis -outputBlock ../artifacts/genesis.block -channelID system-channel
 
 echo "Generating channel creation transaction..."
-configtxgen -profile CertificateVerificationChannel -outputCreateChannelTx ../artifacts/certificatechannel.tx -channelID certificatechannel
+configtxgen -profile CertificateVerificationChannel -outputCreateChannelTx ../artifacts/certificate-verification-channel.tx -channelID certificate-verification-channel
 
 echo "--Artifacts generated successfully!--"

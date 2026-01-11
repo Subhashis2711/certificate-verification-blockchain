@@ -1,8 +1,4 @@
 #!/bin/bash
-#
-# SPDX-License-Identifier: Apache-2.0
-#
-# Script to start Hyperledger Explorer for Certificate Verification Network
 
 set -e
 
@@ -23,8 +19,8 @@ fi
 docker-compose -f $EXPLORER_COMPOSE_FILE up -d
 
 echo "============================================================"
-echo "✅ Explorer is starting..."
-echo "🌐 Access it at: http://localhost:8080"
+echo "Explorer is starting..."
+echo "Access it at: http://localhost:8080"
 echo "============================================================"
 
 # Wait for container health
@@ -35,5 +31,5 @@ sleep 10
 docker ps --filter "name=explorer"
 
 echo "============================================================"
-echo "🧭 Logs (follow with): docker logs -f explorer"
+echo "Logs (follow with): docker logs -f explorer"
 echo "============================================================"

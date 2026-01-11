@@ -114,7 +114,7 @@ services:
       - ORDERER_GENERAL_LOGLEVEL=info
       - CORE_PEER_LOCALMSPID=IssuerMSP
 
-      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=artifacts_certificate-verification-network
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=certificate-verification-network
 
       - CORE_PEER_ID=peer0.issuer.example.com
       - CORE_PEER_ADDRESS=peer0.issuer.example.com:7051
@@ -159,7 +159,7 @@ services:
       - ORDERER_GENERAL_LOGLEVEL=info
       - CORE_PEER_LOCALMSPID=VerifierMSP
 
-      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=artifacts_certificate-verification-network
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=certificate-verification-network
 
       - CORE_PEER_ID=peer0.verifier.example.com
       - CORE_PEER_ADDRESS=peer0.verifier.example.com:9051

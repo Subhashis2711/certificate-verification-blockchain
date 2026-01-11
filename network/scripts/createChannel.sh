@@ -1,10 +1,12 @@
+#!/bin/bash
+
 export CORE_PEER_TLS_ENABLED=true
 export ORDERER_CA=../organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem
 export PEER0_ISSUER_CA=../organizations/peerOrganizations/issuer.example.com/peers/peer0.issuer.example.com/tls/ca.crt
 export PEER0_VERIFIER_CA=../organizations/peerOrganizations/verifier.example.com/peers/peer0.verifier.example.com/tls/ca.crt
 export FABRIC_CFG_PATH=../config/
 
-export CHANNEL_NAME=certificatechannel
+export CHANNEL_NAME=certificate-verification-channel
 
 setGlobalsForOrderer(){
     export CORE_PEER_LOCALMSPID="OrdererMSP"

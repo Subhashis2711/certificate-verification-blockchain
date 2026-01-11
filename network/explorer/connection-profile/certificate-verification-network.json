@@ -19,7 +19,7 @@
     }
   },
   "channels": {
-    "certificatechannel": {
+    "certificate-verification-channel": {
       "peers": {
         "peer0.issuer.example.com": {},
         "peer0.verifier.example.com": {}

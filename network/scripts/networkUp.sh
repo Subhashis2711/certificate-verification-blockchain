@@ -1,4 +1,5 @@
 #!/bin/bash
+
 set -e
 
 # Path to Fabric binaries
