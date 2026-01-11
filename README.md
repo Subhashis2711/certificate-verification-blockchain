@@ -1,183 +1,173 @@
 # Certificate Verification Blockchain (Hyperledger Fabric)
 
-This project implements a **certificate verification system** using **Hyperledger Fabric** with:
-- 1 Orderer
-- 2 Peer Organizations (Issuer & Verifier)
-- CouchDB state database
-- Hyperledger Explorer for visualization
-
----
+This project implements a **certificate verification system** using **Hyperledger Fabric**. It provides a decentralized ledger for issuing and authenticating digital certificates.
 
 ## Prerequisites
 
-Make sure you have the following installed:
+Before starting, ensure you have the following installed:
 
-- Docker & Docker Compose (v2+)
-- Git
-- Bash shell (macOS / Linux)
-- Hyperledger Fabric binaries (already present in `network/bin`)
+* **Docker & Docker Desktop**: Ensure the Docker daemon is running.
+* **Git**: For version control.
+* **Node.js**: (v16.x or v18.x recommended) for chaincode and application development.
+* **VS Code**: Recommended IDE for development.
+* **Bash Shell**: Required for running the automation scripts.
 
----
+## Project Structure
+## Project Structure
 
-## Folder Structure (Important)
-
-```
+~~~text
 cert-verification-blockchain/
+├── backend/
+│   ├── node_modules/             # Backend dependencies
+│   ├── fabricNetwork.js          # Fabric Gateway logic
+│   ├── server.js                 # Express API entry point
+│   └── package.json              # Backend configuration
+│
+├── chaincode/
+│   └── certificate-verification/
+│       ├── node_modules/         # Chaincode dependencies
+│       ├── index.js              # Smart contract entry point
+│       ├── lib/                  # Contract logic (Issue/Verify)
+│       └── package.json          # Chaincode configuration
+│
 ├── network/
-│   ├── bin/                  # Fabric binaries (NOT ignored)
-│   ├── config/               # configtx.yaml, core.yaml, crypto-config.yaml
-│   ├── docker/               # docker-compose files
-│   ├── scripts/              # generate.sh, networkUp.sh, channel scripts
-│   ├── organizations/        # Crypto material (generated)
-│   ├── artifacts/            # Genesis & channel artifacts
+│   ├── bin/                      # Fabric binaries (peer, orderer, configtxgen)
+│   ├── config/                   # core.yaml, configtx.yaml, orderer.yaml
+│   ├── docker/                   # Docker Compose files for network nodes
+│   ├── artifacts/                # Genesis block and channel transactions
+│   ├── organizations/            # Generated Crypto Material (MSP & TLS)
+│   │   ├── peerOrganizations/
+│   │   └── ordererOrganizations/
+│   ├── scripts/                  # Automation Bash scripts
+│   │   ├── generate.sh
+│   │   ├── networkUp.sh
+│   │   ├── createChannel.sh
+│   │   ├── deployCC.sh           # Chaincode deployment script
+│   │   ├── networkDown.sh
+│   │   └── runExplorer.sh
+│   └── explorer/                 # Hyperledger Explorer configuration
+│       ├── config.json
+│       ├── connection-profile/
+│       └── docker-compose.yaml
 │
-├── explorer/
-│   ├── config.json
-│   ├── connection-profile/
-│
-├── docker/
-│   ├── docker-compose-net.yaml
-│   ├── docker-compose-explorer.yaml
-│
-└── README.md
+├── .gitignore                    # Ignored files (node_modules, bin, orgs)
+└── README.md                     # Project documentation
+~~~
+
+## Installation & Setup
+
+### 1. Clone the Repository
+```bash
+git clone <your-repo-url>
+cd cert-verification-blockchain
 ```
 
----
+### 2. Open in VSCode
+```bash
+code .
+```
+> Open the integrated terminal in your editor (Ctrl + `) to run the following commands.
 
-## Step 1: Generate Crypto & Artifacts
+### 3. Install Hyperledger Fabric Binaries
+Run the official script to download the platform-specific Fabric binaries and Docker images:
 
-Run from `network/scripts`:
+```bash
+curl -sSL [https://bit.ly/2ysbOFE](https://bit.ly/2ysbOFE) | bash -s
+```
+
+### 4. Configure Network Binaries
+Move the downloaded `bin` folder into the `network` directory. This ensures the local shell scripts can locate the Fabric tools:
+
+```bash
+cp -r fabric-samples/bin network/bin
+```
+
+## Running the Network
+Navigate to the scripts directory to manage the network:
+
+### Step 0: Cleanup old network configs
+```bash
+cd network/script
+chmod +x cleanUp.sh
+./config.sh
+```
+
+### Step 1: Generate Crypto Artifacts
+Generate the MSP/TLS certificates and genesis block:
 
 ```bash
 chmod +x generate.sh
 ./generate.sh
 ```
 
-This generates:
-- MSP & TLS certificates
-- Genesis block
-- Channel transaction
-
----
-
-## Step 2: Start the Fabric Network
+### Step 2: Launch the Network
+Start the Orderer and Peer nodes:
 
 ```bash
 chmod +x networkUp.sh
 ./networkUp.sh
 ```
 
-This starts:
-- Orderer
-- Issuer Peer + CouchDB
-- Verifier Peer + CouchDB
-
-Verify:
-```bash
-docker ps
-```
-
----
-
-## Step 3: Create & Join Channel
+### Step 3: Create Channel
+Create the channel and join the Issuer and Verifier peers to it:
 
 ```bash
 chmod +x createChannel.sh
 ./createChannel.sh
 ```
 
-Verify channel join:
-```bash
-docker exec -it peer0.issuer.example.com peer channel list
-```
-
----
-
-## Step 4: Start Hyperledger Explorer
+### Step 4: Hyperledger Explorer
+Start the visualization dashboard:
 
 ```bash
 chmod +x runExplorer.sh
 ./runExplorer.sh
 ```
 
-Access Explorer:
-```
-http://localhost:8080
-```
-
-> It is **OK** if Explorer shows only **IssuerMSP** as the client org.
-> VerifierMSP still participates at the network level.
-
----
-
-## Step 5: Verify Network Health
-
-- Explorer UI loads
-- Channel visible
-- Blocks increment after transactions
-- No peer/orderer crash loops
-
----
-
-## Next Planned Steps (Project Roadmap)
-
-1. **Write Chaincode**
-   - Certificate issue
-   - Certificate verify
-   - Certificate revoke
-
-2. **Package & Deploy Chaincode**
-   - Approve for Issuer & Verifier
-   - Commit to channel
-
-3. **Invoke Transactions**
-   - Issue certificate
-   - Verify certificate hash
-
-4. **Integrate Backend**
-   - Node.js / Java service
-   - Fabric Gateway SDK
-
-5. **Frontend (Optional)**
-   - React dashboard
-   - Certificate verification UI
-
----
+> Access the UI at: http://localhost:8080
 
 ## Common Commands
+Stop Network: `cd network/scripts && ./networkDown.sh`
 
-Stop network:
+View Logs: `docker logs -f peer0.issuer.example.com`
+
+Verify Containers: `docker ps`
+
+## Chaincode Deployment
+
+### 1. Install Chaincode Dependencies
+Before deploying, install the Node.js dependencies for the smart contract:
+
 ```bash
-./networkDown.sh
+cd chaincode/certificate-verification
+npm install
 ```
 
-View logs:
+### 2. Deploy to Channel
 ```bash
-docker logs peer0.issuer.example.com
-docker logs orderer.example.com
-docker logs explorer
+cd network/scripts
+chmod +x deployCC.sh
+./deployCC.sh
+```
+This script packages, installs, approves (for both Issuer and Verifier), and commits the chaincode to the channel.
+
+## Backend setup (API)
+The backend uses the Fabric Gateway SDK to interact with the network.
+
+### 1. Install Dependencies
+```bash
+cd ../../backend
+npm install
 ```
 
----
+### 2. Start the server
+```bash
+npm run dev
+```
 
-## Notes
-
-- `network/bin` must always be committed
-- `organizations/` should be gitignored after initial testing
-- Explorer access issues usually mean:
-  - Channel not created
-  - Peer not joined
-  - Wrong admin identity paths
-
----
-
-## Status
-
-✅ Network running  
-✅ Channel created  
-✅ Explorer connected  
-🚧 Chaincode pending  
-
----
-
-Happy building 🚀
+### API Reference
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| **GET** | `/api/certificates` | Retrieve all issued certificates |
+| **POST** | `/api/issue` | Issue a new certificate (requires id, hash, student, etc.) |
+| **POST** | `/api/verify` | Verify a certificate hash against the ledger |
