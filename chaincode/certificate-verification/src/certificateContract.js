@@ -33,33 +33,38 @@ export class CertificateContract extends Contract {
   // --------------------------------------------------
   async IssueCertificate(
     ctx,
-    certificateId,
-    certificateHash,
-    studentName,
-    courseName,
-    issuerName,
-    issuedAt
+    id,
+    hash,
+    certificateType,
+    holderName,
+    holderEmail,
+    issuedBy,
+    organizationId,
+    organizationName,
+    issuedDate,
   ) {
     this._verifyMSP(ctx, ['IssuerMSP']);
 
-    const exists = await this.CertificateExists(ctx, certificateId);
+    const exists = await this.CertificateExists(ctx, id);
     if (exists) {
-      throw new Error(`Certificate ${certificateId} already exists`);
+      throw new Error(`Certificate: ${id} already exists`);
     }
 
     const certificate = {
-      certificateId,
-      certificateHash,
-      studentName,
-      courseName,
-      issuerName,
-      issuedAt,
+      id,
+      hash,
+      holderName,
+      holderEmail,
+      issuedBy,
+      organizationId,
+      organizationName,
+      issuedDate,
       status: 'ACTIVE',
-      docType: 'certificate'
+      certificateType,
     };
 
     await ctx.stub.putState(
-      certificateId,
+      id,
       Buffer.from(
         stringify(sortKeysRecursive(certificate))
       )
@@ -92,7 +97,7 @@ export class CertificateContract extends Contract {
       });
     }
 
-    if (cert.certificateHash !== certificateHash) {
+    if (cert.hash !== certificateHash) {
       return JSON.stringify({
         valid: false,
         reason: 'Hash mismatch'
@@ -147,19 +152,22 @@ export class CertificateContract extends Contract {
   // --------------------------------------------------
   // Get All Certificates
   // --------------------------------------------------
-  async GetAllCertificates(ctx) {
+  async GetCertificatesByOrganization(ctx, organizationId) {
     const results = [];
     const iterator = await ctx.stub.getStateByRange('', '');
 
-    for await (const res of iterator) {
-      const value = res.value.toString('utf8');
+    let result = await iterator.next();
+    while (!result.done) {
+      const value = result.value.value.toString('utf8');
       if (value) {
         const record = JSON.parse(value);
-        if (record.docType === 'certificate') {
+        if (record.organizationId === organizationId) {
           results.push(record);
         }
       }
+      result = await iterator.next();
     }
+    await iterator.close();
 
     return JSON.stringify(results);
   }
