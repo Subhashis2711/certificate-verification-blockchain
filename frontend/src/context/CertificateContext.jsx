@@ -17,7 +17,7 @@ export function CertificateProvider({ children }) {
     const newCertificate = response.data;
     setCertificates(prev => [...prev, newCertificate]);
     return newCertificate;
-  }, [certificates]);
+  }, []);
 
   const verifyCertificate = useCallback(async (certificatePayload) => {
     try {

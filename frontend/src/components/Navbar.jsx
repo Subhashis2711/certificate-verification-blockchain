@@ -4,7 +4,6 @@ import { useAuth } from '../context/AuthContext';
 
 export const Navbar = () => {
   const { user, logout } = useAuth();
-  console.log({ user })
   const location = useLocation();
   const navigate = useNavigate();
 

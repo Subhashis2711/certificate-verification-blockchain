@@ -42,6 +42,7 @@ export class CertificateContract extends Contract {
     organizationId,
     organizationName,
     issuedDate,
+    expiryDate
   ) {
     this._verifyMSP(ctx, ['IssuerMSP']);
 
@@ -59,6 +60,7 @@ export class CertificateContract extends Contract {
       organizationId,
       organizationName,
       issuedDate,
+      expiryDate,
       status: 'ACTIVE',
       certificateType,
     };
@@ -94,6 +96,13 @@ export class CertificateContract extends Contract {
       return JSON.stringify({
         valid: false,
         reason: `Certificate is ${cert.status}`
+      });
+    }
+
+    if (cert.expiryDate && new Date() > new Date(cert.expiryDate)) {
+      return JSON.stringify({
+        valid: false,
+        reason: "Certificate has expired"
       });
     }
 

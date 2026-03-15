@@ -67,8 +67,8 @@ app.post('/api/issue', upload.single('file'), async (req, res) => {
   try {
     const fileBuffer = req.file.buffer;
     const hash = generateSHA256(fileBuffer);
-    const { id, certificateType, holderName, holderEmail, issuedBy, organizationId, organizationName, issuedDate } = req.body;
-    const result = await network.submit('IssueCertificate', id, hash, certificateType, holderName, holderEmail, issuedBy, organizationId, organizationName, issuedDate);
+    const { id, certificateType, holderName, holderEmail, issuedBy, organizationId, organizationName, issuedDate, expiryDate } = req.body;
+    const result = await network.submit('IssueCertificate', id, hash, certificateType, holderName, holderEmail, issuedBy, organizationId, organizationName, issuedDate, expiryDate);
     res.status(201).json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });

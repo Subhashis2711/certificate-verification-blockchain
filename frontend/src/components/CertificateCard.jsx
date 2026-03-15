@@ -76,7 +76,7 @@ export default function CertificateCard({ certificate, showActions = false }) {
         </div>
         <div className="d-flex align-items-center">
           <span className={`badge ${getStatusBadge(certificate.status)} me-2`}>
-            {certificate.status}
+            {certificate.expiryDate && new Date(certificate.expiryDate) < new Date() ? 'EXPIRED' : certificate.status}
           </span>
           {showActions && certificate.status === 'ACTIVE' && (
             <div className="dropdown">

@@ -14,16 +14,23 @@ import { useCertificates } from '../context/CertificateContext';
 import IssueCertificateModal from '../components/IssueCertificateModal';
 import CertificateCard from '../components/CertificateCard';
 
+const getCertificateStatus = (certificate) => {
+  if (certificate.status === "REVOKED") return "REVOKED";
+  if (certificate.expiryDate && new Date(certificate.expiryDate) < new Date()) return "EXPIRED";
+  return "ACTIVE";
+};
+
 export const Dashboard = () => {
   const { user } = useAuth();
-  const { getOrganizationCertificates } = useCertificates();
+  const { certificates, getOrganizationCertificates } = useCertificates();
   const [showIssueModal, setShowIssueModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [certificates, setCertificates] = useState([])
 
   useEffect(() => {
-    getOrganizationCertificates(user?.organizationId || '').then(setCertificates);
+    if (user?.organizationId) {
+      getOrganizationCertificates(user.organizationId);
+    }
   }, [getOrganizationCertificates, user?.organizationId]);
 
   const filteredCertificates = useMemo(() => {
@@ -33,16 +40,16 @@ export const Dashboard = () => {
         cert.holderEmail.toLowerCase().includes(searchQuery.toLowerCase()) ||
         cert.certificateType.toLowerCase().includes(searchQuery.toLowerCase());
 
-      const matchesStatus = statusFilter === 'all' || cert.status === statusFilter;
+      const matchesStatus = statusFilter === 'all' || getCertificateStatus(cert) === statusFilter;;
 
       return matchesSearch && matchesStatus;
     });
   }, [certificates, searchQuery, statusFilter]);
 
   const stats = useMemo(() => {
-    const active = certificates.filter(c => c.status === 'ACTIVE').length;
-    const revoked = certificates.filter(c => c.status === 'REVOKED').length;
-    const expired = certificates.filter(c => c.status === 'EXPIRED').length;
+    const active = certificates.filter(c => getCertificateStatus(c) === "ACTIVE").length;
+    const revoked = certificates.filter(c => getCertificateStatus(c) === "REVOKED").length;
+    const expired = certificates.filter(c => getCertificateStatus(c) === "EXPIRED").length;
     return { total: certificates.length, active, revoked, expired };
   }, [certificates]);
 
@@ -173,7 +180,7 @@ export const Dashboard = () => {
         <div className="row g-3">
           {filteredCertificates.map((certificate) => (
             <div key={certificate.id} className="col-12 col-md-6 col-xl-4">
-              <CertificateCard certificate={certificate} showActions={canIssue} />
+              <CertificateCard certificate={{ ...certificate, status: getCertificateStatus(certificate) }} showActions={canIssue} />
             </div>
           ))}
         </div>
