@@ -89,7 +89,7 @@ Navigate to the scripts directory to manage the network:
 ```bash
 cd network/script
 chmod +x cleanUp.sh
-./config.sh
+./cleanUp.sh
 ```
 
 ### Step 1: Generate Crypto Artifacts
