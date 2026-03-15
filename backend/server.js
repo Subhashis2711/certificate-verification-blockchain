@@ -4,6 +4,10 @@ import cors from 'cors';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { FabricNetwork } from './fabricNetwork.js';
+import multer from "multer";
+import { generateSHA256 } from "./utils.js";
+
+const upload = multer({ storage: multer.memoryStorage() });
 
 const app = express();
 app.use(cors());
@@ -51,27 +55,47 @@ const network = new FabricNetwork(config);
 // --- API Routes ---
 app.get('/api/certificates', async (req, res) => {
   try {
-    const data = await network.query('GetAllCertificates');
+    const { organizationId } = req.query;
+    const data = await network.query('GetCertificatesByOrganization', organizationId);
     res.json(data);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-app.post('/api/issue', async (req, res) => {
+app.post('/api/issue', upload.single('file'), async (req, res) => {
   try {
-    const { id, hash, student, course, issuer, date } = req.body;
-    const result = await network.submit('IssueCertificate', id, hash, student, course, issuer, date);
+    const fileBuffer = req.file.buffer;
+    const hash = generateSHA256(fileBuffer);
+    const { id, certificateType, holderName, holderEmail, issuedBy, organizationId, organizationName, issuedDate } = req.body;
+    const result = await network.submit('IssueCertificate', id, hash, certificateType, holderName, holderEmail, issuedBy, organizationId, organizationName, issuedDate);
     res.status(201).json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-app.post('/api/verify', async (req, res) => {
+app.post('/api/verify', upload.single('file'), async (req, res) => {
   try {
-    const { id, hash } = req.body;
-    const result = await network.query('VerifyCertificate', id, hash);
+    const resolveHash = () => {
+      if (req.file) return generateSHA256(req.file.buffer);
+      return req.body.hash
+    }
+    const hash = resolveHash();
+    if (!hash) return res.status(400).json({ error: 'Unable to generate hash from file or body' });
+    if (!req.body.id) return res.status(400).json({ error: 'certificate ID is missing' });
+    const result = await network.query('VerifyCertificate', req.body.id, hash);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/revoke', async (req, res) => {
+  try {
+    const { id, reason } = req.body;
+    if (!id) return res.status(400).json({ error: "CertificateId is missing" });
+    const result = await network.submit("RevokeCertificate", id, reason || "Revoked by issuer");
     res.json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });
