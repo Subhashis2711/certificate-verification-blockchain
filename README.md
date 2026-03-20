@@ -168,9 +168,11 @@ npm run dev
 ### API Reference
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| **GET** | `/api/certificates` | Retrieve all issued certificates |
+| **GET** | `/api/certificates?organizationId=${organizationId}` | Retrieve all issued certificates |
 | **POST** | `/api/issue` | Issue a new certificate (requires id, hash, student, etc.) |
 | **POST** | `/api/verify` | Verify a certificate hash against the ledger |
+| **POST** | `/api/revoke` | Revoke a certificate |
+
 
 ### Testing backend API
 
