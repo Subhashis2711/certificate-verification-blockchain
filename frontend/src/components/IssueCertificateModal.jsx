@@ -157,12 +157,12 @@ export default function IssueCertificateModal({ show, onHide }) {
                     <Upload size={32} className="text-secondary-custom mb-2" />
                     {file ? (
                       <div>
-                        <p className="mb-1 text-white">{file.name}</p>
+                        <p className="mb-1">{file.name}</p>
                         <small className="text-secondary-custom">Click to change file</small>
                       </div>
                     ) : (
                       <div>
-                        <p className="mb-1 text-white">Drop your certificate file here</p>
+                        <p className="mb-1">Drop your certificate file here</p>
                         <small className="text-secondary-custom">or click to browse</small>
                       </div>
                     )}

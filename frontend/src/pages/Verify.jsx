@@ -162,12 +162,12 @@ export const Verify = () => {
                     <Upload size={48} className="text-secondary-custom mb-3" />
                     {file ? (
                       <div>
-                        <p className="mb-1 h5 text-white">{file.name}</p>
+                        <p className="mb-1 h5">{file.name}</p>
                         <small className="text-secondary-custom">Click to change file</small>
                       </div>
                     ) : (
                       <div>
-                        <p className="mb-1 h5 text-white">Drop your certificate here</p>
+                        <p className="mb-1 h5">Drop your certificate here</p>
                         <small className="text-secondary-custom">
                           Supports PDF, DOC, DOCX, PNG, JPG
                         </small>
